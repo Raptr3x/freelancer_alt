@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
+
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
@@ -23,12 +24,20 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $email = fake()->unique()->safeEmail();
+        
         return [
             'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'email' => $email,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'contact_email' => getRandomItem([$email, fake()->unique()->safeEmail()]),
+            'phone_number' => $this->faker->phoneNumber,
+            'address' => $this->faker->optional()->address,
+            'profile_description' => $this->faker->paragraph,
+            'profile_picture' => $this->faker->imageUrl(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 
