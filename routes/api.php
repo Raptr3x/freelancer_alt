@@ -16,7 +16,7 @@ Route::get('/users/{user_id}', [UserController::class, 'show']);
 // create a new user
 Route::post('/users', [UserController::class, 'store']);
 // update a user
-Route::put('/users/{user_id}', [UserController::class, 'update']);
+Route::post('/users/{user_id}', [UserController::class, 'update']);
 // delete a user
 Route::delete('/users/{user_id}', [UserController::class, 'destroy']);
 

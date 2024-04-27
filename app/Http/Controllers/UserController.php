@@ -7,42 +7,95 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
+    /**
+     * Display a listing of the users.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function index()
     {
         try {
-            $users = DB::table('users')->select('name', 'profile_description', 'profile_picture')->get();
-            return response()->json([
-                'users' => $users
-            ]);
+            $resp = ['users' => DB::table('users')->select('name', 'profile_description', 'profile_picture')->get()];
         } catch (\Exception $e) {
-            return response()->json([
+            $resp = [
                 'error' => 'An error occurred while fetching users',
                 'message' => $e->getMessage()
-            ]);
+            ];
         }
 
+        return response()->json($resp);
+
     }
 
+    /**
+     * Display the specified user.
+     *
+     * @param  int  $user_id
+     * @return \Illuminate\Http\Response
+     */
     public function show($user_id)
     {
-        // return a JSON response of a single user, their name, description, and image path
-        return response()->json([
-            'user' => [
-                'id' => $user_id,
-                'name' => 'John Doe',
-                'description' => 'A software developer',
-                'image' => 'https://via.placeholder.com/150'
-            ]
-        ]);
+        try {
+            $resp = ['user' => DB::table('users')->where('id', $user_id)->first()];
+        } catch (\Exception $e) {
+            $resp = [
+                'error' => 'An error occurred while fetching user ' . $user_id,
+                'message' => $e->getMessage()
+            ];
+        }
+
+        return response()->json($resp);
     }
 
+    /**
+     * Store a newly created user in storage.
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function store(Request $request)
     {
-        return response()->json([
-            'message' => 'User created successfully'
-        ]);
+        try {
+
+            $user = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'contact_email' => $request->contact_email,
+                'phone_number' => $request->phone_number,
+                'password' => bcrypt($request->password),
+                'profile_description' => $request->profile_description,
+                'profile_picture' => $request->profile_picture
+            ];
+
+            if (DB::table('users')->where('email', $user['email'])->exists()) {
+                $resp = ['error' => 'Email already in use'];
+            } else {
+                if (DB::table('users')->insert($user)) {
+                    $resp = [
+                        'message' => 'User created successfully',
+                        'user_id' => DB::getPdo()->lastInsertId()
+                    ];
+                } else {
+                    $resp = ['error' => 'Failed to create user'];
+                }
+            }
+
+        } catch (\Exception $e) {
+            $resp = [
+                'error' => 'An error occurred while creating user',
+                'message' => $e->getMessage()
+            ];
+        }
+
+        return response()->json($resp);
     }
 
+    /**
+     * Update the specified user in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $user_id
+     * @return \Illuminate\Http\Response
+     */
     public function update(Request $request, $user_id)
     {
         return response()->json([
@@ -50,6 +103,12 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Remove the specified user from storage.
+     *
+     * @param  int  $user_id
+     * @return \Illuminate\Http\Response
+     */
     public function destroy($user_id)
     {
         return response()->json([
