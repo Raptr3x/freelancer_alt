@@ -37,6 +37,9 @@ class UserController extends Controller
     {
         try {
             $resp = ['user' => DB::table('users')->where('id', $user_id)->first()];
+            if($resp['user'] == null) {
+                $resp = ['error' => 'User ' . $user_id . ' not found'];
+            }
         } catch (\Exception $e) {
             $resp = [
                 'error' => 'An error occurred while fetching user ' . $user_id,
@@ -96,23 +99,49 @@ class UserController extends Controller
      * @param  int  $user_id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $user_id)
+    public function update(Request $request)
     {
-        return response()->json([
-            'message' => 'User ' . $user_id . ' updated successfully'
-        ]);
+        $user = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'contact_email' => $request->contact_email,
+            'phone_number' => $request->phone_number,
+            'password' => bcrypt($request->password),
+            'profile_description' => $request->profile_description,
+            'profile_picture' => $request->profile_picture
+        ];
+
+        if(DB::table('users')->where('id', $request->user_id)->update($user)){
+            $resp = [
+                'message' => 'User ' . $request->user_id . ' updated successfully'
+            ];
+        } else {
+            $resp = [
+                'error' => 'Failed to update user ' . $request->user_id
+            ];
+        }
+
+        return response()->json($resp);
     }
 
     /**
-     * Remove the specified user from storage.
+     * Delete the specified user from storage.
      *
      * @param  int  $user_id
      * @return \Illuminate\Http\Response
      */
     public function destroy($user_id)
     {
-        return response()->json([
-            'message' => 'User ' . $user_id . ' deleted successfully'
-        ]);
+        if(DB::table('users')->where('id', $user_id)->delete()){
+            $resp = [
+                'message' => 'User ' . $user_id . ' deleted successfully'
+            ];
+        } else {
+            $resp = [
+                'error' => 'Failed to delete user ' . $user_id
+            ];
+        }
+
+        return response()->json($resp);
     }
 }
